@@ -9,6 +9,8 @@ import java.util.*;
 public class BoardService {
   @Autowired
   private BoardDao boardDao;
+  @Autowired
+  private CommentDao commentDao;
 
   // 글을 저장하고 글 번호를 리턴하는 save
   public int save(Board board) {
@@ -22,9 +24,12 @@ public class BoardService {
 }
 
   // 하나의 글을 리턴하는 findByBno
-  public Board findByBno(int bno) {
+  public Map<String, Object> findByBno(int bno) {
     boardDao.increaseReadCnt(bno);
-    return boardDao.findByBno(bno);
+    Board board = boardDao.findByBno(bno);
+    List<Comment> comments = commentDao.findByBno(bno);
+    // 파이썬의 딕셔너리의 해당 {'board' : board, 'comments}에 해당하는 것이 자바의 Map
+    return Map.of("board", board, "comments", comments);
   }
 
   // 글을 변경하는 update
@@ -48,6 +53,7 @@ public class BoardService {
     String storedPassword = boardDao.findByBno(bno).getPassword();
     if (storedPassword.equals(password)) {
       boardDao.delete(bno);
+      commentDao.deleteByBno(bno);
       return true;
     }
     return false;
